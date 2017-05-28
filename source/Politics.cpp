@@ -35,10 +35,10 @@ void Politics::Reset()
 	reputationWith.clear();
 	dominatedPlanets.clear();
 	ResetDaily();
-	
+
 	for(const auto &it : GameData::Governments())
 		reputationWith[&it.second] = it.second.InitialPlayerReputation();
-	
+
 	// Disable fines for today (because the game was just loaded, so any fines
 	// were already checked for when you first landed).
 	for(const auto &it : GameData::Governments())
@@ -51,7 +51,7 @@ bool Politics::IsEnemy(const Government *first, const Government *second) const
 {
 	if(first == second)
 		return false;
-	
+
 	// Just for simplicity, if one of the governments is the player, make sure
 	// it is the first one.
 	if(second->IsPlayer())
@@ -62,11 +62,11 @@ bool Politics::IsEnemy(const Government *first, const Government *second) const
 			return false;
 		if(provoked.count(second))
 			return true;
-		
+
 		auto it = reputationWith.find(second);
 		return (it != reputationWith.end() && it->second < 0.);
 	}
-	
+
 	// Neither government is the player, so the question of enemies depends only
 	// on the attitude matrix.
 	return (first->AttitudeToward(second) < 0. || second->AttitudeToward(first) < 0.);
@@ -82,12 +82,12 @@ void Politics::Offend(const Government *gov, int eventType, int count)
 {
 	if(gov->IsPlayer())
 		return;
-	
+
 	for(const auto &it : GameData::Governments())
 	{
 		const Government *other = &it.second;
 		double weight = other->AttitudeToward(gov);
-		
+
 		// You can provoke a government even by attacking an empty ship, such as
 		// a drone (count = 0, because count = crew).
 		if(eventType & ShipEvent::PROVOKE)
@@ -109,12 +109,11 @@ void Politics::Offend(const Government *gov, int eventType, int count)
 			double penalty = (count * weight) * other->PenaltyFor(eventType);
 			if(eventType & ShipEvent::ATROCITY)
 				reputationWith[other] = min(0., reputationWith[other]);
-			
+
 			reputationWith[other] -= penalty;
 		}
 	}
 }
-
 
 
 // Bribe the given government to be friendly to you for one day.
@@ -134,11 +133,11 @@ bool Politics::CanLand(const Ship &ship, const Planet *planet) const
 		return false;
 	if(!planet->IsInhabited())
 		return true;
-	
+
 	const Government *gov = ship.GetGovernment();
 	if(!gov->IsPlayer())
 		return !IsEnemy(gov, planet->GetGovernment());
-	
+
 	return CanLand(planet);
 }
 
@@ -156,7 +155,7 @@ bool Politics::CanLand(const Planet *planet) const
 		return true;
 	if(provoked.count(planet->GetGovernment()))
 		return false;
-	
+
 	return Reputation(planet->GetGovernment()) >= planet->RequiredReputation();
 }
 
@@ -168,11 +167,11 @@ bool Politics::CanUseServices(const Planet *planet) const
 		return false;
 	if(dominatedPlanets.count(planet))
 		return true;
-	
+
 	auto it = bribedPlanets.find(planet);
 	if(it != bribedPlanets.end())
 		return it->second;
-	
+
 	return Reputation(planet->GetGovernment()) >= planet->RequiredReputation();
 }
 
@@ -210,7 +209,7 @@ string Politics::Fine(PlayerInfo &player, const Government *gov, int scan, const
 	// detection.
 	if(fined.count(gov) || Random::Real() > security || !gov->GetFineFraction())
 		return "";
-	
+
 	string reason;
 	int64_t maxFine = 0;
 	for(const shared_ptr<Ship> &ship : player.Ships())
@@ -222,7 +221,7 @@ string Politics::Fine(PlayerInfo &player, const Government *gov, int scan, const
 			continue;
 		if(ship->GetSystem() != player.GetSystem())
 			continue;
-		
+
 		if(!scan || (scan & ShipEvent::SCAN_CARGO))
 		{
 			int64_t fine = ship->Cargo().IllegalCargoFine();
@@ -262,7 +261,7 @@ string Politics::Fine(PlayerInfo &player, const Government *gov, int scan, const
 				}
 		}
 	}
-	
+
 	if(maxFine < 0)
 	{
 		gov->Offend(ShipEvent::ATROCITY);
