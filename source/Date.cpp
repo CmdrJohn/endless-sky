@@ -171,7 +171,7 @@ Date Date::operator+(int days) const
 			MDAYS[1] = 28 + !(year % 4) - !(year % 100) + !(year % 400);
 		}
 	}
-	while(day < 1)
+	while(day > 1)
 	{
 		// Moving backward in time:
 		--month;
